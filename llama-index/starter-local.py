@@ -25,7 +25,7 @@ load_dotenv()
 Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-base-zh-v1.5")
 
 # ollama
-Settings.llm = Ollama(model="deepseek-ai/DeepSeek-R1-Distill-Qwen-7B", request_timeout=3600.0)
+Settings.llm = Ollama(model="deepseek-r1:7b", request_timeout=3600.0)
 
 # 检查存储是否存在
 PERSIST_DIR = "./storage"
