@@ -45,5 +45,5 @@ else:
 
 # 创建查询引擎
 query_engine = index.as_query_engine()
-response = query_engine.query("代理人是什么意思?")
+response = query_engine.query("代理人是什么意思?中文回答")
 print(response)
