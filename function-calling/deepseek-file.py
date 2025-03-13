@@ -25,23 +25,15 @@ functions = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "file_paths": {
+                    "data": {
                         "type": "array",
                         "items": {
                             "type": "string"
                         },
-                        "description": "需要获取下载地址的文件路径列表"
-                    },
-                    "company_id": {
-                        "type": "integer",
-                        "description": "公司ID"
-                    },
-                    "user_id": {
-                        "type": "integer",
-                        "description": "用户ID，默认为0"
+                        "description": "需要获取下载地址的文件名列表"
                     }
                 },
-                "required": ["file_paths", "company_id"]
+                "required": ["data"]
             }
         }
     }
@@ -62,24 +54,25 @@ def get_token():
     else:
         raise Exception(f"获取token失败: {response.text}")
 
-def get_file_download_url(file_paths, company_id, user_id=0):
+def get_file_download_url(file_paths):
     """获取文件下载URL的函数实现"""
     # 首先获取token
     token = get_token()
 
     # 准备请求获取下载URL
-    download_url_endpoint = f"{BASE_URL}/sc-file/fileService/files/getDownloadUrl"
+    download_url_endpoint = f"{BASE_URL}/common/files/v2/downloadUrl"
     headers = {
         "access_token": token,
         "Content-Type": "application/json"
     }
-    params = {
-        "companyId": company_id,
-        "userId": user_id
+
+    payload = {
+        "data": file_paths
     }
 
+    print(file_paths)
     # 发送请求获取下载URL
-    response = requests.post(download_url_endpoint, headers=headers, params=params, json=file_paths)
+    response = requests.post(download_url_endpoint, headers=headers, json=payload)
 
     if response.status_code == 200:
         return response.json()
@@ -91,20 +84,16 @@ def process_function_call(message):
     function_call = message.tool_calls[0].function
     function_name = function_call.name
     function_args = json.loads(function_call.arguments)
-    print(function_args)
     if function_name == "get_file_download_url":
-        file_paths = function_args.get("file_paths")
-        company_id = function_args.get("company_id")
-        user_id = function_args.get("user_id", 0)
-
-        result = get_file_download_url(file_paths, company_id, user_id)
+        file_paths = function_args.get("data")
+        result = get_file_download_url(file_paths)
         return result
     else:
         return {"error": "Unknown function"}
 
 # 示例对话
 def run_conversation():
-    messages = [{"role": "user", "content": "我需要获取这个文件的下载链接: previewImg/test/4a6cfdf1-4867-423e-9d70-68a4f9f80ace.png，公司ID是3809"}]
+    messages = [{"role": "user", "content": "我需要获取这个文件的下载链接: previewImg/test/4a6cfdf1-4867-423e-9d70-68a4f9f80ace.png"}]
 
     response = client.chat.completions.create(
         model="deepseek-chat",
@@ -114,8 +103,6 @@ def run_conversation():
     )
 
     response_message = response.choices[0].message
-
-    print(response_message)
 
     # 检查是否有函数调用
     if response_message.tool_calls:
